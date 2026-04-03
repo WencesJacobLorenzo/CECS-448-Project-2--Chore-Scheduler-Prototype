@@ -114,11 +114,16 @@ select {
   display: grid;
   grid-template-columns: 1.1fr 1fr;
   gap: 20px;
+  align-items: start;
 }
 
-.calendar-panel,
+.calendar-panel {
+  align-self: start;
+  height: fit-content;
+}
+
 .details-panel {
-  min-height: 640px;
+  min-height: 450px;
 }
 
 .calendar-header {
@@ -133,17 +138,20 @@ select {
   font-size: 1.25rem;
 }
 
-.calendar-weekdays,
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #475569;
+}
+
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 8px;
-}
-
-.calendar-weekdays {
-  margin-bottom: 8px;
-  font-weight: bold;
-  color: #475569;
+  overflow: visible;
 }
 
 .calendar-weekdays div {
@@ -244,7 +252,11 @@ select {
 .chore-chart {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+
+  max-height: 400px;   /* controls scroll area size */
+  overflow-y: auto;
+  padding-right: 4px;  /* prevents scrollbar overlap */
 }
 
 .chart-header,
@@ -266,7 +278,7 @@ select {
 }
 
 .chart-row {
-  padding: 12px;
+  padding: 8px 12px;
   border: 1px solid #e5e7eb;
   border-left-width: 8px;
   border-radius: 10px;
@@ -412,30 +424,31 @@ select {
 
 .bulk-card {
   margin-top: 20px;
+  padding: 14px;
 }
 
 .bulk-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(180px, 1fr));
-  gap: 12px;
-  margin-bottom: 14px;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .bulk-form-grid input,
 .bulk-form-grid select {
-  padding: 10px 12px;
+  padding: 8px 12px;
   border-radius: 8px;
   font: inherit;
   border: 1px solid #cbd5e1;
 }
 
 .weekday-picker {
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .weekday-picker-label {
   display: block;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   font-weight: 600;
   color: #334155;
 }
@@ -443,7 +456,7 @@ select {
 .weekday-options {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .weekday-chip {
@@ -475,7 +488,7 @@ select {
 }
 
 .bulk-helper-text {
-  margin-top: 12px;
+  margin-top: 10px;
   color: #64748b;
   font-size: 0.95rem;
 }
@@ -499,16 +512,6 @@ select {
 .timeframe-group select:last-child {
   width: 120px;  /* weeks/months/years */
   min-width: unset;
-}
-
-.chore-chart {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-
-  max-height: 400px;   /* controls scroll area size */
-  overflow-y: auto;
-  padding-right: 4px;  /* prevents scrollbar overlap */
 }
 
 .chore-chart::-webkit-scrollbar {
