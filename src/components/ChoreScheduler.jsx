@@ -275,71 +275,59 @@ function ChoreScheduler() {
       <section className="main-grid">
         <div className="calendar-panel card">
           <div className="calendar-header">
-            <button 
-              className="mobile-calendar-toggle"
-              onClick={() => setMobileCalendarOpen(!mobileCalendarOpen)}
-            >
-              {mobileCalendarOpen ? '📅 Hide Calendar' : '📅 Show Calendar'}
+            <button onClick={() => setCurrentMonth(moveMonth(currentMonth, -1))}>
+              ←
             </button>
-            
-            <div className="month-navigation">
-              <button onClick={() => setCurrentMonth(moveMonth(currentMonth, -1))}>
-                ←
-              </button>
-              <h2>{getMonthName(currentMonth)}</h2>
-              <button onClick={() => setCurrentMonth(moveMonth(currentMonth, 1))}>
-                →
-              </button>
-            </div>
+            <h2>{getMonthName(currentMonth)}</h2>
+            <button onClick={() => setCurrentMonth(moveMonth(currentMonth, 1))}>
+              →
+            </button>
           </div>
 
-          <div className={`calendar-content ${mobileCalendarOpen ? 'mobile-open' : 'mobile-closed'}`}>
-            <div className="calendar-weekdays">
-              <div>Sun</div>
-              <div>Mon</div>
-              <div>Tue</div>
-              <div>Wed</div>
-              <div>Thu</div>
-              <div>Fri</div>
-              <div>Sat</div>
-            </div>
+          <div className="calendar-weekdays">
+            <div>Sun</div>
+            <div>Mon</div>
+            <div>Tue</div>
+            <div>Wed</div>
+            <div>Thu</div>
+            <div>Fri</div>
+            <div>Sat</div>
+          </div>
 
-            <div className="calendar-grid">
-              {calendarDays.map(({ date, currentMonth: isCurrentMonth }) => {
-                const dateKey = formatDateKey(date);
-                const isSelected = selectedDate === dateKey;
-                const isToday = todayKey === dateKey;
-                const completed = getCompletedCount(dateKey);
-                const total = getTotalCount(dateKey);
+          <div className="calendar-grid">
+            {calendarDays.map(({ date, currentMonth: isCurrentMonth }) => {
+              const dateKey = formatDateKey(date);
+              const isSelected = selectedDate === dateKey;
+              const isToday = todayKey === dateKey;
+              const completed = getCompletedCount(dateKey);
+              const total = getTotalCount(dateKey);
 
-                return (
-                  <button
-                    key={dateKey}
-                    className={`calendar-day
-                      ${isCurrentMonth ? "" : "other-month"}
-                      ${isSelected ? "selected" : ""}
-                      ${isToday ? "today" : ""}
-                    `}
-                    onClick={() => {
-                      setSelectedDate(dateKey);
-                      setMobileCalendarOpen(false);
-                    }}
-                  >
-                    <div className="day-top">
-                      <span className="day-number">{date.getDate()}</span>
-                      {isToday && <span className="today-badge">Today</span>}
-                    </div>
+              return (
+                <button
+                  key={dateKey}
+                  className={`calendar-day
+                    ${isCurrentMonth ? "" : "other-month"}
+                    ${isSelected ? "selected" : ""}
+                    ${isToday ? "today" : ""}
+                  `}
+                  onClick={() => {
+                    setSelectedDate(dateKey);
+                  }}
+                >
+                  <div className="day-top">
+                    <span className="day-number">{date.getDate()}</span>
+                    {isToday && <span className="today-badge">Today</span>}
+                  </div>
 
-                    <div className="day-summary">
-                      <span className="summary-label">Chores</span>
-                      <span className="summary-count">
-                        {completed}/{total}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+                  <div className="day-summary">
+                    <span className="summary-label">Chores</span>
+                    <span className="summary-count">
+                      {completed}/{total}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -514,6 +502,100 @@ function ChoreScheduler() {
           </div>
         </div>
       </section>
+
+      {/* Mobile Calendar Modal */}
+      {mobileCalendarOpen && (
+        <div 
+          className="calendar-modal-backdrop" 
+          onClick={() => setMobileCalendarOpen(false)}
+        >
+          <div 
+            className="calendar-modal" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="calendar-modal-header">
+              <h3>Select Date</h3>
+              <button 
+                className="modal-close-btn" 
+                onClick={() => setMobileCalendarOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="calendar-modal-content">
+              {/* Month Navigation */}
+              <div className="modal-month-nav">
+                <button onClick={() => setCurrentMonth(moveMonth(currentMonth, -1))}>
+                  ←
+                </button>
+                <h2>{getMonthName(currentMonth)}</h2>
+                <button onClick={() => setCurrentMonth(moveMonth(currentMonth, 1))}>
+                  →
+                </button>
+              </div>
+
+              {/* Weekdays */}
+              <div className="calendar-weekdays">
+                <div>Sun</div>
+                <div>Mon</div>
+                <div>Tue</div>
+                <div>Wed</div>
+                <div>Thu</div>
+                <div>Fri</div>
+                <div>Sat</div>
+              </div>
+
+              {/* Calendar Grid */}
+              <div className="calendar-grid">
+                {calendarDays.map(({ date, currentMonth: isCurrentMonth }) => {
+                  const dateKey = formatDateKey(date);
+                  const isSelected = selectedDate === dateKey;
+                  const isToday = todayKey === dateKey;
+                  const completed = getCompletedCount(dateKey);
+                  const total = getTotalCount(dateKey);
+
+                  return (
+                    <button
+                      key={dateKey}
+                      className={`calendar-day
+                        ${isCurrentMonth ? "" : "other-month"}
+                        ${isSelected ? "selected" : ""}
+                        ${isToday ? "today" : ""}
+                      `}
+                      onClick={() => {
+                        setSelectedDate(dateKey);
+                        setMobileCalendarOpen(false);
+                      }}
+                    >
+                      <div className="day-top">
+                        <span className="day-number">{date.getDate()}</span>
+                        {isToday && <span className="today-badge">Today</span>}
+                      </div>
+
+                      <div className="day-summary">
+                        <span className="summary-label">Chores</span>
+                        <span className="summary-count">
+                          {completed}/{total}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Action Button */}
+      <button 
+        className="calendar-fab" 
+        onClick={() => setMobileCalendarOpen(true)}
+        aria-label="Open calendar"
+      >
+        📅
+      </button>
     </div>
   );
 }

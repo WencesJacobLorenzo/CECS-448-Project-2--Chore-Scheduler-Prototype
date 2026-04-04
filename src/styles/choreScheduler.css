@@ -138,15 +138,150 @@ select {
   font-size: 1.25rem;
 }
 
-.mobile-calendar-toggle {
-  display: none; /* Hidden on desktop by default */
+/* ===== MOBILE CALENDAR MODAL ===== */
+
+/* Floating Action Button - hidden on desktop */
+.calendar-fab {
+  display: none;
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: white;
+  border: none;
+  font-size: 28px;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+  cursor: pointer;
+  z-index: 999;
+  transition: all 0.3s ease;
 }
 
-.month-navigation {
+.calendar-fab:hover {
+  transform: scale(1.1);
+  background: #1d4ed8;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.5);
+}
+
+.calendar-fab:active {
+  transform: scale(0.95);
+}
+
+/* Modal Backdrop */
+.calendar-modal-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+/* Modal Container */
+.calendar-modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 16px;
+  max-width: 90vw;
+  width: 420px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+/* Modal Header */
+.calendar-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
+  padding: 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.calendar-modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #1e293b;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #6b7280;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: background 0.2s;
+  padding: 0;
+  line-height: 1;
+}
+
+.modal-close-btn:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+/* Modal Content */
+.calendar-modal-content {
+  padding: 20px;
+}
+
+.modal-month-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-month-nav h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.modal-month-nav button {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-month-nav button:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translate(-50%, -40%);
+  }
+  to { 
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
 }
 
 .calendar-weekdays {
@@ -417,61 +552,15 @@ select {
     grid-template-columns: 1fr;
   }
 
-  /* Restructure calendar header for mobile */
-  .calendar-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
+  /* Hide inline calendar panel on mobile */
+  .calendar-panel {
+    display: none;
   }
 
-  /* Show and style the toggle button */
-  .mobile-calendar-toggle {
+  /* Show FAB and modal backdrop on mobile */
+  .calendar-fab,
+  .calendar-modal-backdrop {
     display: block;
-    width: 100%;
-    padding: 16px 20px;
-    background: #2563eb;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s ease;
-    text-align: center;
-    order: -1; /* Ensures button appears first/above month navigation */
-  }
-
-  .mobile-calendar-toggle:hover {
-    background: #1d4ed8;
-  }
-
-  .mobile-calendar-toggle:active {
-    background: #1e40af;
-  }
-
-  /* Month navigation stays in its own row */
-  .month-navigation {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  /* Collapsed state - hide calendar with smooth animation */
-  .calendar-content.mobile-closed {
-    max-height: 0;
-    overflow: hidden;
-    opacity: 0;
-    margin-top: 0;
-    transition: max-height 0.4s ease-out, opacity 0.3s ease-out, margin-top 0.3s ease-out;
-  }
-
-  /* Expanded state - show calendar with smooth animation */
-  .calendar-content.mobile-open {
-    max-height: 2000px; /* Large enough for 6-row calendars */
-    overflow: visible;
-    opacity: 1;
-    margin-top: 16px;
-    transition: max-height 0.4s ease-in, opacity 0.3s ease-in, margin-top 0.3s ease-in;
   }
 }
 
@@ -488,11 +577,17 @@ select {
 
 /* Ensure calendar always visible on desktop */
 @media (min-width: 1101px) {
-  .calendar-content {
-    max-height: none !important;
-    opacity: 1 !important;
-    overflow: visible !important;
+  /* Ensure FAB and modal hidden on desktop */
+  .calendar-fab,
+  .calendar-modal-backdrop {
+    display: none !important;
   }
+
+  /* Ensure calendar panel visible on desktop */
+  .calendar-panel {
+    display: block !important;
+  }
+}
   
   .calendar-header {
     flex-direction: row !important;
