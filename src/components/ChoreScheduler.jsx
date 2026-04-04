@@ -44,6 +44,7 @@ function ChoreScheduler() {
   const [bulkTimeUnit, setBulkTimeUnit] = useState("weeks");
   const [bulkFrequency, setBulkFrequency] = useState("weekly");
   const [bulkDaysOfWeek, setBulkDaysOfWeek] = useState([1]);
+  const [mobileCalendarOpen, setMobileCalendarOpen] = useState(false);
 
   const calendarDays = useMemo(() => getCalendarDays(currentMonth), [currentMonth]);
 
@@ -274,57 +275,71 @@ function ChoreScheduler() {
       <section className="main-grid">
         <div className="calendar-panel card">
           <div className="calendar-header">
-            <button onClick={() => setCurrentMonth(moveMonth(currentMonth, -1))}>
-              ←
+            <button 
+              className="mobile-calendar-toggle"
+              onClick={() => setMobileCalendarOpen(!mobileCalendarOpen)}
+            >
+              {mobileCalendarOpen ? '📅 Hide Calendar' : '📅 Show Calendar'}
             </button>
-            <h2>{getMonthName(currentMonth)}</h2>
-            <button onClick={() => setCurrentMonth(moveMonth(currentMonth, 1))}>
-              →
-            </button>
+            
+            <div className="month-navigation">
+              <button onClick={() => setCurrentMonth(moveMonth(currentMonth, -1))}>
+                ←
+              </button>
+              <h2>{getMonthName(currentMonth)}</h2>
+              <button onClick={() => setCurrentMonth(moveMonth(currentMonth, 1))}>
+                →
+              </button>
+            </div>
           </div>
 
-          <div className="calendar-weekdays">
-            <div>Sun</div>
-            <div>Mon</div>
-            <div>Tue</div>
-            <div>Wed</div>
-            <div>Thu</div>
-            <div>Fri</div>
-            <div>Sat</div>
-          </div>
+          <div className={`calendar-content ${mobileCalendarOpen ? 'mobile-open' : 'mobile-closed'}`}>
+            <div className="calendar-weekdays">
+              <div>Sun</div>
+              <div>Mon</div>
+              <div>Tue</div>
+              <div>Wed</div>
+              <div>Thu</div>
+              <div>Fri</div>
+              <div>Sat</div>
+            </div>
 
-          <div className="calendar-grid">
-            {calendarDays.map(({ date, currentMonth: isCurrentMonth }) => {
-              const dateKey = formatDateKey(date);
-              const isSelected = selectedDate === dateKey;
-              const isToday = todayKey === dateKey;
-              const completed = getCompletedCount(dateKey);
-              const total = getTotalCount(dateKey);
+            <div className="calendar-grid">
+              {calendarDays.map(({ date, currentMonth: isCurrentMonth }) => {
+                const dateKey = formatDateKey(date);
+                const isSelected = selectedDate === dateKey;
+                const isToday = todayKey === dateKey;
+                const completed = getCompletedCount(dateKey);
+                const total = getTotalCount(dateKey);
 
-              return (
-                <button
-                  key={dateKey}
-                  className={`calendar-day
-                    ${isCurrentMonth ? "" : "other-month"}
-                    ${isSelected ? "selected" : ""}
-                    ${isToday ? "today" : ""}
-                  `}
-                  onClick={() => setSelectedDate(dateKey)}
-                >
-                  <div className="day-top">
-                    <span className="day-number">{date.getDate()}</span>
-                    {isToday && <span className="today-badge">Today</span>}
-                  </div>
+                return (
+                  <button
+                    key={dateKey}
+                    className={`calendar-day
+                      ${isCurrentMonth ? "" : "other-month"}
+                      ${isSelected ? "selected" : ""}
+                      ${isToday ? "today" : ""}
+                    `}
+                    onClick={() => {
+                      setSelectedDate(dateKey);
+                      setMobileCalendarOpen(false);
+                    }}
+                  >
+                    <div className="day-top">
+                      <span className="day-number">{date.getDate()}</span>
+                      {isToday && <span className="today-badge">Today</span>}
+                    </div>
 
-                  <div className="day-summary">
-                    <span className="summary-label">Chores</span>
-                    <span className="summary-count">
-                      {completed}/{total}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
+                    <div className="day-summary">
+                      <span className="summary-label">Chores</span>
+                      <span className="summary-count">
+                        {completed}/{total}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
