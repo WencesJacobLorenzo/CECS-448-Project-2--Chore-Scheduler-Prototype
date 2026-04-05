@@ -47,6 +47,7 @@ function ChoreScheduler() {
   const [mobileCalendarOpen, setMobileCalendarOpen] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [editChore, setEditChore] = useState(null); // { id, title, assignedTo, date, originalDate }
+  const [toast, setToast] = useState(null); // { message: string, type: "success" | "delete" | "edit" }
 
   const calendarDays = useMemo(() => getCalendarDays(currentMonth), [currentMonth]);
 
@@ -187,40 +188,86 @@ function ChoreScheduler() {
 
   function handleSaveEdit() {
     if (!editChore.title.trim()) return;
+
     setChoresByDate((prev) => {
       const updated = { ...prev };
-      // Remove from original date
-      updated[editChore.originalDate] = (updated[editChore.originalDate] || []).filter(
-        (c) => c.id !== editChore.id
-      );
-      // Add to (possibly new) date with updated fields
+
+      updated[editChore.originalDate] =
+        (updated[editChore.originalDate] || []).filter(
+          (c) => c.id !== editChore.id
+        );
+
       const updatedChore = {
         id: editChore.id,
         title: editChore.title.trim(),
         assignedTo: Number(editChore.assignedTo),
         done: false
       };
-      updated[editChore.date] = [...(updated[editChore.date] || []), updatedChore];
+
+      updated[editChore.date] = [
+        ...(updated[editChore.date] || []),
+        updatedChore
+      ];
+
       return updated;
     });
+
+    showToast(`"${editChore.title}" Updated`, "edit");
+
     setEditChore(null);
   }
 
+  function showToast(message, type = "success") {
+    const formattedMessage =
+      message.charAt(0).toUpperCase() + message.slice(1);
+
+    setToast({ message: formattedMessage, type });
+
+    setTimeout(() => {
+      setToast(null);
+    }, 2500);
+  }
+
   function handleDeleteChore(choreId) {
+    const currentChore = (choresByDate[selectedDate] || []).find(
+      (c) => c.id === choreId
+    );
+
+    if (!currentChore) return;
+
     setChoresByDate((prev) => ({
       ...prev,
-      [selectedDate]: (prev[selectedDate] || []).filter((chore) => chore.id !== choreId)
+      [selectedDate]: (prev[selectedDate] || []).filter(
+        (chore) => chore.id !== choreId
+      )
     }));
+
     setConfirmDeleteId(null);
+
+    showToast(`"${currentChore.title}" Deleted`, "delete");
   }
 
   function handleToggleDone(choreId) {
+    const currentChore = (choresByDate[selectedDate] || []).find(
+      (c) => c.id === choreId
+    );
+
+    if (!currentChore) return;
+
+    const newDoneState = !currentChore.done;
+
     setChoresByDate((prev) => ({
       ...prev,
       [selectedDate]: (prev[selectedDate] || []).map((chore) =>
-        chore.id === choreId ? { ...chore, done: !chore.done } : chore
+        chore.id === choreId ? { ...chore, done: newDoneState } : chore
       )
     }));
+
+    showToast(
+      newDoneState
+        ? `"${currentChore.title}" Marked Complete`
+        : `"${currentChore.title}" Marked Pending`
+    );
   }
 
   function getPersonName(personId) {
@@ -253,6 +300,8 @@ function ChoreScheduler() {
   }
 
   const selectedChores = getFilteredChoresForDate(selectedDate);
+
+  const isViewingToday = selectedDate === todayKey;
 
   return (
     <div className="scheduler-page">
@@ -420,9 +469,14 @@ function ChoreScheduler() {
         </div>
 
         <div className="details-panel">
-          <div className="card">
+          <div className={`card ${isViewingToday ? "today-panel" : ""}`}>
             <div className="section-header">
-              <h2>Chores for {formatReadableDate(selectedDate)}</h2>
+              <h2>
+                Chores for {formatReadableDate(selectedDate)}
+                {isViewingToday && (
+                  <span className="today-label"> (Today)</span>
+                )}
+              </h2>
             </div>
 
             <div className="selected-day-summary">
@@ -690,6 +744,11 @@ function ChoreScheduler() {
       >
         📅
       </button>
+      {toast && (
+        <div className={`toast toast-${toast.type}`}>
+          {toast.message}
+        </div>
+      )}
     </div>
   );
 }
