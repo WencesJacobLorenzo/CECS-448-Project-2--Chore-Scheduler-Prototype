@@ -190,9 +190,9 @@ select {
   transform: translate(-50%, -50%);
   background: white;
   border-radius: 16px;
-  max-width: 90vw;
-  width: 420px;
-  max-height: 85vh;
+  max-width: 96vw;
+  width: 460px;
+  max-height: 92vh;
   overflow-y: auto;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   animation: slideUp 0.3s ease;
@@ -565,13 +565,123 @@ select {
 }
 
 @media (max-width: 700px) {
-  .chart-header,
+  /* Hide the table header — cards are self-explanatory on mobile */
+  .chart-header {
+    display: none;
+  }
+
+  /* Redesign each chore row as a 2-column card:
+     top-left: task name | top-right: status badge
+     bottom-left: assigned person | bottom-right: action buttons */
   .chart-row {
-    grid-template-columns: 1fr;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "title  status"
+      "person actions";
+    gap: 6px 10px;
+    padding: 12px;
+  }
+
+  .chart-row > span:nth-child(1) {
+    grid-area: title;
+    font-weight: 600;
+    font-size: 0.97rem;
+    align-self: center;
+  }
+
+  .chart-row > span.assigned-person {
+    grid-area: person;
+    align-self: center;
+    font-size: 0.88rem;
+  }
+
+  /* Status span — shown as a small pill badge */
+  .chart-row > span:nth-child(3) {
+    grid-area: status;
+    justify-self: end;
+    align-self: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #475569;
+    white-space: nowrap;
+  }
+
+  .chart-row > div.row-actions {
+    grid-area: actions;
+    justify-self: end;
+    align-self: center;
+    display: flex;
+    gap: 6px;
+    flex-wrap: nowrap;
+  }
+
+  .row-actions button {
+    padding: 7px 12px;
+    font-size: 0.82rem;
   }
 
   .calendar-day {
-    min-height: 85px;
+    min-height: 72px;
+    padding: 5px;
+  }
+
+  .day-number {
+    font-size: 0.88rem;
+  }
+
+  .summary-label {
+    font-size: 0.65rem;
+  }
+
+  .summary-count {
+    font-size: 0.82rem;
+  }
+
+  .day-summary {
+    margin-top: 4px;
+    gap: 1px;
+  }
+
+  .calendar-grid {
+    gap: 4px;
+  }
+
+  .calendar-weekdays {
+    gap: 4px;
+  }
+
+  .calendar-weekdays div {
+    font-size: 0.78rem;
+    padding: 4px 0;
+  }
+
+  .calendar-modal-content {
+    padding: 12px;
+  }
+
+  .modal-month-nav {
+    margin-bottom: 12px;
+  }
+
+  .modal-month-nav button {
+    padding: 6px 12px;
+    font-size: 1rem;
+  }
+
+  .today-badge {
+    font-size: 0.6rem;
+    padding: 2px 5px;
+  }
+
+  .day-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
   }
 }
 
@@ -586,15 +696,6 @@ select {
   /* Ensure calendar panel visible on desktop */
   .calendar-panel {
     display: block !important;
-  }
-}
-  
-  .calendar-header {
-    flex-direction: row !important;
-  }
-  
-  .month-navigation {
-    width: 100%;
   }
 }
 
