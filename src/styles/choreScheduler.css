@@ -94,14 +94,24 @@ select {
 }
 
 .inline-form button,
-.calendar-header button,
-.row-actions button {
+.calendar-header button {
   padding: 10px 14px;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   background: #2563eb;
   color: white;
+}
+
+.row-actions button {
+  padding: 7px 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #2563eb;
+  color: white;
+  font-size: 0.82rem;
+  white-space: nowrap;
 }
 
 .inline-form button:hover,
@@ -408,9 +418,10 @@ select {
 .chart-header,
 .chart-row {
   display: grid;
-  grid-template-columns: 2fr 1.3fr 1fr 1.6fr;
-  gap: 12px;
+  grid-template-columns: 2fr 1fr 0.7fr minmax(160px, 190px);
+  gap: 10px;
   align-items: center;
+  min-width: 0;
 }
 
 .chart-header {
@@ -418,17 +429,22 @@ select {
   padding: 10px 12px;
   background: #eff6ff;
   border-radius: 10px;
-  position: sticky;
-  top: 0;
-  z-index: 2;
+}
+
+.chart-header span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .chart-row {
-  padding: 8px 12px;
+  padding: 10px 12px;
   border: 1px solid #e5e7eb;
   border-left-width: 8px;
   border-radius: 10px;
   background: #fafafa;
+  min-height: 52px;
+  flex-shrink: 0;
 }
 
 .assigned-person {
@@ -448,8 +464,10 @@ select {
 
 .row-actions {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  flex-direction: row;
+  gap: 6px;
+  flex-wrap: nowrap;
+  align-items: center;
 }
 
 .delete-btn {
@@ -564,65 +582,66 @@ select {
   }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 900px) {
   /* Hide the table header — cards are self-explanatory on mobile */
   .chart-header {
     display: none;
   }
 
-  /* Redesign each chore row as a 2-column card:
-     top-left: task name | top-right: status badge
-     bottom-left: assigned person | bottom-right: action buttons */
+  /* Each chore row: flex card, DOM order is already correct:
+     title → status → person → actions */
   .chart-row {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto auto;
-    grid-template-areas:
-      "title  status"
-      "person actions";
-    gap: 6px 10px;
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
     padding: 12px;
   }
 
-  .chart-row > span:nth-child(1) {
-    grid-area: title;
+  /* Title — line 1 left, grows */
+  .chart-row > span:first-child {
+    flex: 1 1 auto;
+    order: 1;
     font-weight: 600;
     font-size: 0.97rem;
-    align-self: center;
+    min-width: 0;
   }
 
-  .chart-row > span.assigned-person {
-    grid-area: person;
-    align-self: center;
-    font-size: 0.88rem;
-  }
-
-  /* Status span — shown as a small pill badge */
-  .chart-row > span:nth-child(3) {
-    grid-area: status;
-    justify-self: end;
-    align-self: center;
+  /* Status — line 1 right, pill (reordered visually to follow title) */
+  .chart-row > .chore-status {
+    flex: 0 0 auto;
+    order: 2;
     font-size: 0.75rem;
     font-weight: 600;
+    color: #475569;
+    background: #f1f5f9;
     padding: 3px 9px;
     border-radius: 999px;
-    background: #f1f5f9;
-    color: #475569;
     white-space: nowrap;
   }
 
-  .chart-row > div.row-actions {
-    grid-area: actions;
-    justify-self: end;
-    align-self: center;
-    display: flex;
-    gap: 6px;
-    flex-wrap: nowrap;
+  /* Person — line 2, full width */
+  .chart-row > span.assigned-person {
+    flex: 0 0 100%;
+    order: 3;
+    font-size: 0.88rem;
   }
 
-  .row-actions button {
-    padding: 7px 12px;
+  /* Actions — line 3, full width with divider */
+  .chart-row > div.row-actions {
+    flex: 0 0 100%;
+    order: 4;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 8px;
+    margin-top: 4px;
+    gap: 6px;
+  }
+
+  .chart-row > div.row-actions button {
+    flex: 1;
+    padding: 8px 6px;
     font-size: 0.82rem;
+    text-align: center;
   }
 
   .calendar-day {
@@ -793,6 +812,139 @@ select {
 .timeframe-group select:last-child {
   width: 120px;  /* weeks/months/years */
   min-width: unset;
+}
+
+
+/* ===== DELETE CONFIRMATION POPUP ===== */
+.confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+.confirm-dialog {
+  background: white;
+  border-radius: 14px;
+  padding: 28px 24px 20px;
+  width: 300px;
+  max-width: 90vw;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+  animation: floatUp 0.25s ease;
+  text-align: center;
+}
+
+@keyframes floatUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.confirm-message {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.confirm-subtext {
+  margin: 0 0 20px;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.confirm-actions button {
+  flex: 1;
+  padding: 10px 0;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #f1f5f9;
+  color: #374151;
+}
+
+.confirm-actions button:hover {
+  background: #e2e8f0;
+}
+
+.confirm-actions .delete-btn {
+  background: #dc2626;
+  color: white;
+}
+
+.confirm-actions .delete-btn:hover {
+  background: #b91c1c;
+  opacity: 1;
+}
+
+.confirm-actions .save-btn {
+  background: #2563eb;
+  color: white;
+}
+
+.confirm-actions .save-btn:hover {
+  background: #1d4ed8;
+  opacity: 1;
+}
+
+/* ===== EDIT DIALOG ===== */
+.edit-dialog {
+  width: 360px;
+  text-align: left;
+}
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.edit-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 6px;
+}
+
+.edit-input {
+  padding: 9px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.95rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.edit-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* ===== EDIT BUTTON ===== */
+.edit-btn {
+  background: #f1f5f9 !important;
+  color: #374151 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.edit-btn:hover {
+  background: #e2e8f0 !important;
 }
 
 .chore-chart::-webkit-scrollbar {

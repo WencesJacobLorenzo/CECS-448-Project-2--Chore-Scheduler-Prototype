@@ -45,6 +45,8 @@ function ChoreScheduler() {
   const [bulkFrequency, setBulkFrequency] = useState("weekly");
   const [bulkDaysOfWeek, setBulkDaysOfWeek] = useState([1]);
   const [mobileCalendarOpen, setMobileCalendarOpen] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [editChore, setEditChore] = useState(null); // { id, title, assignedTo, date, originalDate }
 
   const calendarDays = useMemo(() => getCalendarDays(currentMonth), [currentMonth]);
 
@@ -173,11 +175,43 @@ function ChoreScheduler() {
     setBulkTimeUnit("weeks");
   }
 
+  function handleOpenEdit(chore) {
+    setEditChore({
+      id: chore.id,
+      title: chore.title,
+      assignedTo: chore.assignedTo,
+      date: selectedDate,
+      originalDate: selectedDate
+    });
+  }
+
+  function handleSaveEdit() {
+    if (!editChore.title.trim()) return;
+    setChoresByDate((prev) => {
+      const updated = { ...prev };
+      // Remove from original date
+      updated[editChore.originalDate] = (updated[editChore.originalDate] || []).filter(
+        (c) => c.id !== editChore.id
+      );
+      // Add to (possibly new) date with updated fields
+      const updatedChore = {
+        id: editChore.id,
+        title: editChore.title.trim(),
+        assignedTo: Number(editChore.assignedTo),
+        done: false
+      };
+      updated[editChore.date] = [...(updated[editChore.date] || []), updatedChore];
+      return updated;
+    });
+    setEditChore(null);
+  }
+
   function handleDeleteChore(choreId) {
     setChoresByDate((prev) => ({
       ...prev,
       [selectedDate]: (prev[selectedDate] || []).filter((chore) => chore.id !== choreId)
     }));
+    setConfirmDeleteId(null);
   }
 
   function handleToggleDone(choreId) {
@@ -222,6 +256,60 @@ function ChoreScheduler() {
 
   return (
     <div className="scheduler-page">
+      {editChore !== null && (
+        <div className="confirm-backdrop" onClick={() => setEditChore(null)}>
+          <div className="confirm-dialog edit-dialog" onClick={(e) => e.stopPropagation()}>
+            <p className="confirm-message">Edit Chore</p>
+
+            <div className="edit-form">
+              <label className="edit-label">Chore Name</label>
+              <input
+                className="edit-input"
+                type="text"
+                value={editChore.title}
+                onChange={(e) => setEditChore({ ...editChore, title: e.target.value })}
+              />
+
+              <label className="edit-label">Assigned To</label>
+              <select
+                className="edit-input"
+                value={editChore.assignedTo}
+                onChange={(e) => setEditChore({ ...editChore, assignedTo: e.target.value })}
+              >
+                {people.map((person) => (
+                  <option key={person.id} value={person.id}>{person.name}</option>
+                ))}
+              </select>
+
+              <label className="edit-label">Date</label>
+              <input
+                className="edit-input"
+                type="date"
+                value={editChore.date}
+                onChange={(e) => setEditChore({ ...editChore, date: e.target.value })}
+              />
+            </div>
+
+            <div className="confirm-actions">
+              <button onClick={() => setEditChore(null)}>Cancel</button>
+              <button className="save-btn" onClick={handleSaveEdit}>Save</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmDeleteId !== null && (
+        <div className="confirm-backdrop" onClick={() => setConfirmDeleteId(null)}>
+          <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
+            <p className="confirm-message">Delete this chore?</p>
+            <p className="confirm-subtext">This action cannot be undone.</p>
+            <div className="confirm-actions">
+              <button onClick={() => setConfirmDeleteId(null)}>Cancel</button>
+              <button className="delete-btn" onClick={() => handleDeleteChore(confirmDeleteId)}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
       <header className="page-header">
         <h1>Household Chore Scheduler</h1>
         <p>Interactive front-end prototype for chore planning and daily tracking.</p>
@@ -366,7 +454,7 @@ function ChoreScheduler() {
             <div className="chore-chart">
               <div className="chart-header">
                 <span>Task</span>
-                <span>Assigned To</span>
+                <span>Assigned</span>
                 <span>Status</span>
                 <span>Actions</span>
               </div>
@@ -388,15 +476,21 @@ function ChoreScheduler() {
                         {getPersonName(chore.assignedTo)}
                       </span>
 
-                      <span>{chore.done ? "Done" : "Pending"}</span>
+                      <span className="chore-status">{chore.done ? "Done" : "Pending"}</span>
 
                       <div className="row-actions">
                         <button onClick={() => handleToggleDone(chore.id)}>
                           {chore.done ? "Undo" : "Mark Done"}
                         </button>
                         <button
+                          className="edit-btn"
+                          onClick={() => handleOpenEdit(chore)}
+                        >
+                          Edit
+                        </button>
+                        <button
                           className="delete-btn"
-                          onClick={() => handleDeleteChore(chore.id)}
+                          onClick={() => setConfirmDeleteId(chore.id)}
                         >
                           Delete
                         </button>
