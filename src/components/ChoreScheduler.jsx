@@ -48,6 +48,9 @@ function ChoreScheduler() {
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [editChore, setEditChore] = useState(null); // { id, title, assignedTo, date, originalDate }
   const [toast, setToast] = useState(null); // { message: string, type: "success" | "delete" | "edit" }
+  const [activeMemberMenu, setActiveMemberMenu] = useState(null); // person.id or null
+  const [editingMember, setEditingMember] = useState(null); // { id, name } or null
+  const [confirmDeleteMember, setConfirmDeleteMember] = useState(null); // { id, name, choreCount } or null
 
   const calendarDays = useMemo(() => getCalendarDays(currentMonth), [currentMonth]);
 
@@ -279,6 +282,113 @@ function ChoreScheduler() {
     return index >= 0 ? `person-color-${index % 8}` : "person-color-default";
   }
 
+  function handleToggleMemberMenu(personId) {
+    setActiveMemberMenu(prev => prev === personId ? null : personId);
+  }
+
+  function handleOpenMemberEdit(person) {
+    setEditingMember({ id: person.id, name: person.name });
+    setActiveMemberMenu(null);
+  }
+
+  function handleSaveMemberEdit(event) {
+    if (event) event.stopPropagation();
+    
+    const trimmed = editingMember.name.trim();
+    
+    if (!trimmed) {
+      showToast("Name cannot be empty", "delete");
+      return;
+    }
+    
+    setPeople(prev => 
+      prev.map(person => 
+        person.id === editingMember.id 
+          ? { ...person, name: trimmed }
+          : person
+      )
+    );
+    
+    showToast(`Renamed to "${trimmed}"`, "edit");
+    setEditingMember(null);
+  }
+
+  function handleCancelMemberEdit(event) {
+    if (event) event.stopPropagation();
+    setEditingMember(null);
+  }
+
+  function handleOpenDeleteMember(person) {
+    // Prevent deleting last member
+    if (people.length === 1) {
+      showToast("Cannot delete the last member", "delete");
+      setActiveMemberMenu(null);
+      return;
+    }
+
+    // Count chores assigned to this member across all dates
+    const choreCount = Object.values(choresByDate).reduce((count, chores) => {
+      return count + chores.filter(c => c.assignedTo === person.id).length;
+    }, 0);
+    
+    setConfirmDeleteMember({
+      id: person.id,
+      name: person.name,
+      choreCount
+    });
+    
+    setActiveMemberMenu(null);
+  }
+
+  function handleDeleteMember(personId) {
+    const memberName = people.find(p => p.id === personId)?.name || "Member";
+    
+    // Remove member from people list
+    setPeople(prev => prev.filter(person => person.id !== personId));
+    
+    // Remove all chores assigned to this member from all dates
+    setChoresByDate(prev => {
+      const updated = {};
+      Object.keys(prev).forEach(dateKey => {
+        const filteredChores = prev[dateKey].filter(
+          chore => chore.assignedTo !== personId
+        );
+        if (filteredChores.length > 0) {
+          updated[dateKey] = filteredChores;
+        }
+      });
+      return updated;
+    });
+    
+    // Reset filter if deleted member was selected
+    if (filterPerson === String(personId)) {
+      setFilterPerson("all");
+    }
+    
+    // Reset chore form selects if deleted member was selected
+    const remainingPeople = people.filter(p => p.id !== personId);
+    if (remainingPeople.length > 0) {
+      const firstRemainingId = remainingPeople[0].id;
+      if (newChorePersonId === personId) {
+        setNewChorePersonId(firstRemainingId);
+      }
+      if (bulkPersonId === personId) {
+        setBulkPersonId(firstRemainingId);
+      }
+    }
+    
+    setConfirmDeleteMember(null);
+    showToast(`"${memberName}" deleted`, "delete");
+  }
+
+  function handleMemberInputKeyDown(event) {
+    if (event.key === 'Enter') {
+      handleSaveMemberEdit(event);
+    } else if (event.key === 'Escape') {
+      handleCancelMemberEdit(event);
+    }
+  }
+
   function getChoresForDate(dateKey) {
     return choresByDate[dateKey] || [];
   }
@@ -304,7 +414,14 @@ function ChoreScheduler() {
   const isViewingToday = selectedDate === todayKey;
 
   return (
-    <div className="scheduler-page">
+    <div 
+      className="scheduler-page"
+      onClick={() => {
+        if (activeMemberMenu !== null) {
+          setActiveMemberMenu(null);
+        }
+      }}
+    >
       {editChore !== null && (
         <div className="confirm-backdrop" onClick={() => setEditChore(null)}>
           <div className="confirm-dialog edit-dialog" onClick={(e) => e.stopPropagation()}>
@@ -359,6 +476,27 @@ function ChoreScheduler() {
           </div>
         </div>
       )}
+
+      {confirmDeleteMember !== null && (
+        <div className="confirm-backdrop" onClick={() => setConfirmDeleteMember(null)}>
+          <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
+            <p className="confirm-message">Delete {confirmDeleteMember.name}?</p>
+            <p className="confirm-subtext">
+              This will permanently delete {confirmDeleteMember.choreCount} chore(s) 
+              assigned to {confirmDeleteMember.name}. This action cannot be undone.
+            </p>
+            <div className="confirm-actions">
+              <button onClick={() => setConfirmDeleteMember(null)}>Cancel</button>
+              <button 
+                className="delete-btn" 
+                onClick={() => handleDeleteMember(confirmDeleteMember.id)}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <header className="page-header">
         <h1>Household Chore Scheduler</h1>
         <p>Interactive front-end prototype for chore planning and daily tracking.</p>
@@ -371,9 +509,74 @@ function ChoreScheduler() {
 
         <div className="legend-list">
           {people.map((person, index) => (
-            <div key={person.id} className="legend-item">
-              <span className={`legend-color person-color-${index % 8}`}></span>
-              <span>{person.name}</span>
+            <div key={person.id} className="legend-item-wrapper">
+              {/* Member Chip (clickable) */}
+              <div 
+                className={`legend-item ${activeMemberMenu === person.id ? 'menu-active' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!editingMember) {
+                    handleToggleMemberMenu(person.id);
+                  }
+                }}
+              >
+                <span className={`legend-color person-color-${index % 8}`}></span>
+                
+                {editingMember?.id === person.id ? (
+                  // Inline editing mode
+                  <input
+                    className="member-name-input"
+                    type="text"
+                    value={editingMember.name}
+                    onChange={(e) => setEditingMember({ ...editingMember, name: e.target.value })}
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={handleMemberInputKeyDown}
+                    autoFocus
+                  />
+                ) : (
+                  // Normal display mode
+                  <span className="member-name">{person.name}</span>
+                )}
+
+                {/* Visual hint icon */}
+                {!editingMember && <span className="menu-hint">⋮</span>}
+              </div>
+
+              {/* Dropdown Menu */}
+              {activeMemberMenu === person.id && !editingMember && (
+                <div className="member-menu" onClick={(e) => e.stopPropagation()}>
+                  <button 
+                    className="menu-option edit-option"
+                    onClick={() => handleOpenMemberEdit(person)}
+                  >
+                    Edit Name
+                  </button>
+                  <button 
+                    className="menu-option delete-option"
+                    onClick={() => handleOpenDeleteMember(person)}
+                  >
+                    Delete Member
+                  </button>
+                </div>
+              )}
+
+              {/* Save/Cancel buttons when editing */}
+              {editingMember?.id === person.id && (
+                <div className="member-edit-actions">
+                  <button 
+                    className="edit-action-btn save-btn"
+                    onClick={handleSaveMemberEdit}
+                  >
+                    ✓
+                  </button>
+                  <button 
+                    className="edit-action-btn cancel-btn"
+                    onClick={handleCancelMemberEdit}
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>

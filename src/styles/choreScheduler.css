@@ -62,6 +62,14 @@ select {
   margin-bottom: 14px;
 }
 
+/* Member item wrapper for positioning menu */
+.legend-item-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .legend-item {
   display: flex;
   align-items: center;
@@ -70,6 +78,152 @@ select {
   padding: 8px 12px;
   border-radius: 999px;
   border: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.legend-item:hover {
+  background: #e5e7eb;
+  border-color: #cbd5e1;
+}
+
+.legend-item.menu-active {
+  background: #dbeafe;
+  border-color: #2563eb;
+}
+
+.member-name {
+  font-weight: 500;
+}
+
+.menu-hint {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  line-height: 1;
+  margin-left: 2px;
+}
+
+/* Inline editing input */
+.member-name-input {
+  border: 1px solid #2563eb;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font: inherit;
+  font-size: 0.9rem;
+  min-width: 100px;
+  outline: none;
+  background: white;
+}
+
+.member-name-input:focus {
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+/* Edit action buttons (Save/Cancel) */
+.member-edit-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.edit-action-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.edit-action-btn.save-btn {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: white;
+}
+
+.edit-action-btn.save-btn:hover {
+  background: #15803d;
+  border-color: #15803d;
+}
+
+.edit-action-btn.cancel-btn {
+  background: #6b7280;
+  border-color: #6b7280;
+  color: white;
+}
+
+.edit-action-btn.cancel-btn:hover {
+  background: #4b5563;
+  border-color: #4b5563;
+}
+
+/* Dropdown menu */
+.member-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  min-width: 160px;
+  overflow: hidden;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Menu options */
+.menu-option {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: white;
+  text-align: left;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  color: #374151;
+  font-weight: 500;
+}
+
+.menu-option:hover {
+  background: #f3f4f6;
+}
+
+.menu-option:active {
+  background: #e5e7eb;
+}
+
+/* Divider between options */
+.menu-option + .menu-option {
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Delete option styling */
+.delete-option {
+  color: #dc2626;
+}
+
+.delete-option:hover {
+  background: #fef2f2;
 }
 
 .legend-color {
@@ -77,6 +231,7 @@ select {
   height: 14px;
   border-radius: 50%;
   display: inline-block;
+  flex-shrink: 0;
 }
 
 .inline-form {
@@ -579,6 +734,18 @@ select {
   .calendar-fab,
   .calendar-modal-backdrop {
     display: block;
+  }
+}
+
+@media (max-width: 700px) {
+  /* Position member menu as modal on small screens */
+  .member-menu {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    margin-top: 0;
   }
 }
 
